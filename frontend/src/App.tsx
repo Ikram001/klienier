@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { Button } from "@/components/ui/button"
-import { Copy, Check, LinkIcon } from "lucide-react" // Optional: for a cleaner look
+import { Copy, Check, LinkIcon, Download } from "lucide-react"
+import { QRCodeSVG } from 'qrcode.react'; // Import the QR component
 
 function App() {
   const [url, setUrl] = useState('');
@@ -9,13 +10,13 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  const fullShortUrl = `https://klienier-backend.vercel.app/url/${shortId}`;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!url) return;
-    
     setLoading(true);
     try {
-      // Note: Ensure your backend PORT matches (you had 8000 here, 8001 earlier)
       const response = await axios.post('https://klienier-backend.vercel.app/url', { url });
       setShortId(response.data.id);
     } catch (err) {
@@ -27,22 +28,40 @@ function App() {
   };
 
   const copyToClipboard = () => {
-    const fullUrl = `https://klienier-backend.vercel.app/url/${shortId}`;
-    navigator.clipboard.writeText(fullUrl);
+    navigator.clipboard.writeText(fullShortUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Optional: Function to download the QR code as an image
+  const downloadQRCode = () => {
+    const svg = document.getElementById('qr-code-svg');
+    if (!svg) return;
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx?.drawImage(img, 0, 0);
+      const pngFile = canvas.toDataURL("image/png");
+      const downloadLink = document.createElement("a");
+      downloadLink.download = `qr-${shortId}.png`;
+      downloadLink.href = `${pngFile}`;
+      downloadLink.click();
+    };
+    img.src = `data:image/svg+xml;base64,${btoa(svgData)}`;
+  };
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-indigo-500/30">
-      {/* Background Glow */}
       <div className="fixed top-0 left-0 w-full h-full overflow-hidden -z-10">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/20 blur-[120px] rounded-full"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/20 blur-[120px] rounded-full"></div>
       </div>
 
       <main className="max-w-4xl mx-auto px-6 py-20">
-        {/* Header Section - Fixed v4 Gradient */}
         <header className="text-center mb-16">
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-4 bg-clip-text text-transparent bg-linear-to-b from-white to-white/50">
             Shorten. Share. <span className="text-indigo-500">Track.</span>
@@ -52,7 +71,6 @@ function App() {
           </p>
         </header>
 
-        {/* Input Card (Glassmorphism) */}
         <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-2 md:p-3 shadow-2xl transition-all hover:border-white/20">
           <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-3">
             <input
@@ -73,7 +91,6 @@ function App() {
           </form>
         </div>
 
-        {/* Result Bento Grid */}
         {shortId && (
           <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="md:col-span-2 bg-indigo-500/10 border border-indigo-500/20 rounded-3xl p-6 flex flex-col justify-between">
@@ -82,7 +99,7 @@ function App() {
               </span>
               <div className="flex items-center justify-between gap-4">
                 <code className="text-xl md:text-2xl font-mono text-indigo-300 truncate">
-                  https://klienier-backend.vercel.app/url/{shortId}
+                  {fullShortUrl.replace('https://', '')}
                 </code>
                 <Button 
                   onClick={copyToClipboard}
@@ -95,11 +112,25 @@ function App() {
               </div>
             </div>
             
-            <div className="bg-white/5 border border-white/10 rounded-3xl p-6 flex flex-col items-center justify-center text-center">
-              <span className="text-gray-500 text-xs mb-3 font-bold uppercase tracking-tighter">Quick Scan</span>
-              <div className="w-20 h-20 bg-linear-to-br from-white/20 to-white/5 rounded-xl flex items-center justify-center border border-white/10">
-                <span className="text-[10px] text-gray-400 px-2 leading-tight">QR Coming Soon</span>
+            {/* Live QR Code Section */}
+            <div className="bg-white/5 border border-white/10 rounded-3xl p-6 flex flex-col items-center justify-center text-center relative group">
+              <span className="text-gray-500 text-xs mb-3 font-bold uppercase tracking-tighter">Scan to Visit</span>
+              <div className="bg-white p-2 rounded-xl">
+                <QRCodeSVG 
+                  id="qr-code-svg"
+                  value={fullShortUrl} 
+                  size={80} 
+                  level="H" 
+                  includeMargin={false}
+                />
               </div>
+              <button 
+                onClick={downloadQRCode}
+                className="absolute top-2 right-2 p-2 opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-white"
+                title="Download QR"
+              >
+                <Download size={16} />
+              </button>
             </div>
           </div>
         )}
