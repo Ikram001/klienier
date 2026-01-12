@@ -15,6 +15,7 @@ connectMongodb(dbUrl)
   .catch((err) => console.log("Error: ", err));
 app.use(logger);
 app.use("/url", router);
+
 app.listen(PORT, () => {
   console.log(`server running on port ${PORT}`);
 });

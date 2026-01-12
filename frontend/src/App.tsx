@@ -16,7 +16,7 @@ function App() {
     setLoading(true);
     try {
       // Note: Ensure your backend PORT matches (you had 8000 here, 8001 earlier)
-      const response = await axios.post('http://localhost:8000/url', { url });
+      const response = await axios.post('https://klienier-backend.vercel.app/url', { url });
       setShortId(response.data.id);
     } catch (err) {
       console.error("Error shortening URL", err);
@@ -27,7 +27,7 @@ function App() {
   };
 
   const copyToClipboard = () => {
-    const fullUrl = `http://localhost:8000/url/${shortId}`;
+    const fullUrl = `https://klienier-backend.vercel.app/url/${shortId}`;
     navigator.clipboard.writeText(fullUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -82,7 +82,7 @@ function App() {
               </span>
               <div className="flex items-center justify-between gap-4">
                 <code className="text-xl md:text-2xl font-mono text-indigo-300 truncate">
-                  localhost:8000/url/{shortId}
+                  https://klienier-backend.vercel.app/url/{shortId}
                 </code>
                 <Button 
                   onClick={copyToClipboard}
