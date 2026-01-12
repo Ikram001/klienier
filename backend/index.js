@@ -5,9 +5,10 @@ import { connectMongodb } from "./connectDatabase.js";
 import logger from "./middleware/logger.js";
 const PORT = process.env.PORT;
 const app = express();
+const dbUrl = process.env.MONGODB_URI;
 app.use(express.json());
 app.use(cors());
-connectMongodb("mongodb://localhost/short-url")
+connectMongodb(dbUrl)
   .then(() => {
     console.log("MongoDB connected.");
   })
