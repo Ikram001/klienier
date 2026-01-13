@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import axios from 'axios';
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,18 @@ import {
   Home, Menu, X, ExternalLink, MousePointerClick 
 } from "lucide-react";
 import { QRCodeSVG } from 'qrcode.react';
+
+// --- Interfaces ---
+
+interface Visit {
+  timestamp: number;
+}
+
+interface AnalyticsData {
+  totalClicks: number;
+  redirectURL: string;
+  visitHistory: Visit[];
+}
 
 // --- Shared Components ---
 
@@ -86,12 +98,15 @@ const ShortenerPage = () => {
     try {
       const response = await axios.post('https://klienier-backend.vercel.app/url', { url });
       setShortId(response.data.id);
-    } catch (err) { alert("Error generating URL"); } 
-    finally { setLoading(false); }
+    } catch (_err) { 
+      alert(`Error generating URL${_err}`); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   const downloadQRCode = () => {
-    const svg = document.getElementById('qr-code-svg') as any;
+    const svg = document.getElementById('qr-code-svg') as SVGSVGElement | null;
     if (!svg) return;
     const svgData = new XMLSerializer().serializeToString(svg);
     const canvas = document.createElement('canvas');
@@ -169,25 +184,20 @@ const ShortenerPage = () => {
 };
 
 // --- Page: Analytics ---
+
 const AnalyticsPage = () => {
   const [searchId, setSearchId] = useState('');
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(false);
 
   const fetchAnalytics = async () => {
-   
-    const cleanId = searchId.split('/').pop()?.trim();
-    
-    if (!cleanId) return;
+    if (!searchId) return;
     setLoading(true);
-    setData(null); 
-
     try {
-      const res = await axios.get(`https://klienier-backend.vercel.app/url/analytics/${cleanId}`);
+      const res = await axios.get(`https://klienier-backend.vercel.app/url/analytics/${searchId}`);
       setData(res.data);
-    } catch (err: any) { 
-      const message = err.response?.data?.error || "Could not find that ID";
-      alert(message); 
+    } catch (_err) { 
+      alert(`Could not find ID ${_err}`); 
     } finally { 
       setLoading(false); 
     }
@@ -209,7 +219,6 @@ const AnalyticsPage = () => {
             className="flex-1 bg-transparent px-6 py-4 outline-none placeholder:text-gray-600 text-lg"
             value={searchId}
             onChange={(e) => setSearchId(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && fetchAnalytics()}
           />
           <Button 
             onClick={fetchAnalytics} 
@@ -235,7 +244,7 @@ const AnalyticsPage = () => {
               <ExternalLink size={14}/> Destination
             </p>
             <p className="text-xl font-medium truncate text-gray-300">
-              {data.redirectURL || "URL not found"}
+              {data.redirectURL || "Source not found"}
             </p>
           </div>
           
@@ -243,9 +252,9 @@ const AnalyticsPage = () => {
             <div className="md:col-span-2 bg-white/5 border border-white/10 p-8 rounded-3xl">
               <p className="text-gray-500 text-xs font-black uppercase tracking-widest mb-6">Recent Activity</p>
               <div className="space-y-4">
-                {data.visitHistory.slice(-5).reverse().map((visit: any, i: number) => (
+                {data.visitHistory.slice(-3).reverse().map((visit, i) => (
                   <div key={i} className="flex justify-between items-center border-b border-white/5 pb-3 last:border-0">
-                    <span className="text-gray-400 text-sm">Visitor interaction</span>
+                    <span className="text-gray-400 text-sm">Visitor detected</span>
                     <span className="text-indigo-400 font-mono text-xs">
                       {new Date(visit.timestamp).toLocaleString()}
                     </span>
@@ -259,6 +268,7 @@ const AnalyticsPage = () => {
     </div>
   );
 };
+
 // --- Main App Component ---
 
 export default function App() {
