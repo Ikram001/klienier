@@ -7,6 +7,7 @@ import {
   Home, Menu, X, ExternalLink, MousePointerClick 
 } from "lucide-react";
 import { QRCodeSVG } from 'qrcode.react';
+import logo from './assets/favicon.png'; // Use the correct relative path
 
 // --- Interfaces ---
 
@@ -41,7 +42,7 @@ const Sidebar = ({ isOpen, toggle }: { isOpen: boolean, toggle: () => void }) =>
         <div className="p-6 flex items-center justify-between border-b border-white/5">
           <Link to="/" className="flex items-center gap-3 group" onClick={toggle}>
             <img 
-              src="./src/assets/favicon.png" 
+              src={logo}
               alt="Logo" 
               className="w-8 h-8 rounded-lg object-contain"
             />
