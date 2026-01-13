@@ -280,7 +280,7 @@ export default function App() {
       <div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-indigo-500/30 overflow-x-hidden">
         <header className="fixed top-0 w-full p-6 flex items-center justify-between z-40 bg-[#0a0a0a]/40 backdrop-blur-xl border-b border-white/5">
           <Link to="/" className="flex items-center gap-3 group">
-            <img src="./src/assets/favicon.png" alt="Logo" className="w-9 h-9 object-contain" />
+            <img src={logo} alt="Logo" className="w-9 h-9 object-contain" />
             <span className="font-bold text-xl tracking-tighter">KLIENIER</span>
           </Link>
 
