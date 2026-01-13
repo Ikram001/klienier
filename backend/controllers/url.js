@@ -5,6 +5,7 @@ export async function handleGenerateShortURL(req, res) {
   const body = req.body;
   const shortId = nanoid(8);
   if (!body.url) return res.status(400).json({ error: "url is required" });
+
   await URL.create({
     shortId: shortId,
     redirectURL: body.url,
@@ -20,18 +21,23 @@ export async function handleGetShortURL(req, res) {
     { shortId },
     { $push: { visitHistory: { timestamp: Date.now() } } }
   );
-  // Safety check to prevent server crash
-  if (!result) {
-    return res.status(404).json({ error: "Short ID not found" });
-  }
+
+  if (!result) return res.status(404).json({ error: "Short ID not found" });
+
   res.redirect(result.redirectURL);
 }
 
 export async function handleGetAnalytics(req, res) {
   const shortId = req.params.shortId;
   const result = await URL.findOne({ shortId });
+
+  if (!result) {
+    return res.status(404).json({ error: "No analytics found for this ID" });
+  }
+
   res.json({
     totalClicks: result.visitHistory.length,
-    analytics: result.visitHistory,
+    redirectURL: result.redirectURL,
+    visitHistory: result.visitHistory,
   });
 }
